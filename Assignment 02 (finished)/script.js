@@ -16,7 +16,9 @@ const submitBtn = document.getElementById('submit-btn')
 const tableBodyEl = document.getElementById('tbody')
 const deleteBtn = document.getElementsByClassName('btn-danger')
 const healthyBtn = document.getElementById('healthy-btn')
+const sidebarEl = document.getElementById('sidebar')
 
+// Get data from inputs and save to an object
 
 
 // Pet array stores all pets data
@@ -28,17 +30,36 @@ let healthyCheck = false
 // Healthy pets array
 let healthyPetArr = []
 
-// Task 1:  Add even to submit button
-submitBtn.addEventListener('click', function () {
+// Render table from local storage
+// Get petArr from local storage
+if (getFromStorage() == null) {
+    petArr = []
+} else {
+    petArr = getFromStorage()
+}
 
-    //Task 2: Get data from inputs and save to an object
+// breedList
+let breedList = []
+
+if ((getFromStorageBreed() == null)) {
+    breedList = []
+} else {
+    breedList = getFromStorageBreed()
+}
+
+// Render petArr to page
+renderTableData(petArr)
+
+
+// Add even to submit button
+submitBtn.addEventListener('click', function () {
     const data = {
         id: inputId.value,
         name: inputName.value,
         age: parseInt(inputAge.value),
         type: inputType.value,
         weight: parseInt(inputWeight.value),
-        length: parseInt(inputLength.value),
+        dlength: parseInt(inputLength.value),
         color: inputColor.value,
         breed: inputBreed.value,
         vaccinated: inputVaccinated.checked,
@@ -48,7 +69,7 @@ submitBtn.addEventListener('click', function () {
     }
 
 
-    // Task 3:  Input validation
+    // Input validation
     // Check to see if every field is filled
     if (inputId.value == '') return alert('ID must be filled')
     if (inputName.value == '') return alert('Name must be filled')
@@ -72,12 +93,13 @@ submitBtn.addEventListener('click', function () {
         // Check if weight is between 1 and 15
         if (data.weight >= 1 && data.weight <= 15) {
             // Check if length is between 1 and 100
-            if (data.length >= 1 && data.length <= 100) {
+            if (data.dlength >= 1 && data.dlength <= 100) {
                 // Check if type is selected
                 if (data.type !== 'Select Type' && data.type !== null) {
                     // Check if breed is selected
                     if (data.breed !== 'Select Breed' && data.breed !== null) {
                         petArr.push(data)
+                        saveToStorage(petArr)
                         renderTableData(petArr)
                     } else {
                         alert('Please select Breed!')
@@ -98,55 +120,7 @@ submitBtn.addEventListener('click', function () {
     resetForm()
 })
 
-// Task 4: Render pet list
-// Show pet which was added
-function renderTableData(petArr) {
-    tableBodyEl.innerHTML = ''
-
-    for (let i = 0; i < petArr.length; i++) {
-        const row = document.createElement('tr')
-
-        // Green sign if these are true, red if false
-        let sterilized = petArr[i].sterilized ? '<i class="bi bi-check-circle-fill"></i>' : '<i class="bi bi-x-circle-fill"></i>'
-        let dewormed = petArr[i].dewormed ? '<i class="bi bi-check-circle-fill"></i>' : '<i class="bi bi-x-circle-fill"></i>'
-        let vaccinated = petArr[i].vaccinated ? '<i class="bi bi-check-circle-fill"></i>' : '<i class="bi bi-x-circle-fill"></i>'
-
-        // Add data to row
-        row.innerHTML = `
-            <th scope="row">P00${petArr[i].id}</th> 
-            <td> ${petArr[i].name} </td> <td>3</td>
-            <td> ${petArr[i].type} </td>
-            <td> ${petArr[i].weight} kg</td>
-            <td> ${petArr[i].length} cm</td>
-            <td> ${petArr[i].breed} </td>
-            <td> <i class="bi bi-square-fill" style="color: ${petArr[i].color}"></i> </td>
-            <td> ${vaccinated} </td>
-            <td> ${dewormed} </td>
-            <td> ${sterilized} </td>
-            <td> ${petArr[i].date} </td>
-            <td><button data-id="${petArr[i].id}" type="button" class="btn btn-danger" id="btn-delete">Delete</button></td>			
-            `
-
-        tableBodyEl.appendChild(row)
-    }
-}
-
-// Task 5: Reset the from
-function resetForm() {
-    inputId.value = ''
-    inputName.value = ''
-    inputAge.value = ''
-    inputType.value = 'Select Type'
-    inputWeight.value = ''
-    inputLength.value = ''
-    inputColor.value = ''
-    inputBreed.value = 'Select Breed'
-    inputVaccinated.checked = false
-    inputDewormed.checked = false
-    inputSterilized.checked = false
-}
-
-// Task 6: Delete pet
+// Delete pet
 tableBodyEl.addEventListener('click', function (e) {
     // If delete btn is not clicked, stop the function
     if (e.target.id != 'btn-delete') return
@@ -166,10 +140,16 @@ tableBodyEl.addEventListener('click', function (e) {
 
     // Remove said data from petArr
     petArr.splice(petArr.findIndex(data => data.id == petId), 1)
+
+    // Rewrite petArr in local storage
+    saveToStorage(petArr)
+
+    // Render petArr again
     renderTableData(petArr)
 })
 
-// Task 7: Show healthy pets
+
+// Show healthy pets
 healthyBtn.addEventListener('click', function () {
     // Change value of healthyCheck everytime the healthyBtn is clicked
     healthyCheck == false ? healthyCheck = true : healthyCheck = false
@@ -190,6 +170,100 @@ healthyBtn.addEventListener('click', function () {
 
 })
 
+
+// Render function
+function renderTableData(petArr) {
+
+    tableBodyEl.innerHTML = ''
+
+    for (let i = 0; i < petArr.length; i++) {
+        const row = document.createElement('tr')
+
+        // Green sign if these are true, red if false
+        let sterilized = petArr[i].sterilized ? '<i class="bi bi-check-circle-fill"></i>' : '<i class="bi bi-x-circle-fill"></i>'
+        let dewormed = petArr[i].dewormed ? '<i class="bi bi-check-circle-fill"></i>' : '<i class="bi bi-x-circle-fill"></i>'
+        let vaccinated = petArr[i].vaccinated ? '<i class="bi bi-check-circle-fill"></i>' : '<i class="bi bi-x-circle-fill"></i>'
+
+        // Add data to row
+        row.innerHTML = `
+            <th scope="row">P00${petArr[i].id}</th> 
+            <td> ${petArr[i].name} </td> 
+            <td> ${petArr[i].age}</td>
+            <td> ${petArr[i].type} </td>
+            <td> ${petArr[i].weight} kg</td>
+            <td> ${petArr[i].dlength} cm</td>
+            <td> ${petArr[i].breed} </td>
+            <td> <i class="bi bi-square-fill" style="color: ${petArr[i].color}"></i> </td>
+            <td> ${vaccinated} </td>
+            <td> ${dewormed} </td>
+            <td> ${sterilized} </td>
+            <td> ${petArr[i].date} </td>
+            <td><button data-id="${petArr[i].id}" type="button" class="btn btn-danger" id="btn-delete">Delete</button></td>			
+            `
+
+        tableBodyEl.appendChild(row)
+    }
+}
+
+
+// Reset the from
+function resetForm() {
+    inputId.value = ''
+    inputName.value = ''
+    inputAge.value = ''
+    inputType.value = 'Select Type'
+    inputWeight.value = ''
+    inputLength.value = ''
+    inputColor.value = ''
+    inputBreed.value = 'Select Breed'
+    inputVaccinated.checked = false
+    inputDewormed.checked = false
+    inputSterilized.checked = false
+}
+
+
+// Show breed options
+inputType.addEventListener('change', function (e) {
+    // Clear breed options in breed input
+    inputBreed.innerHTML = ''
+
+    // Array of breed after user select type (cat or dog)
+    let filtered = []
+
+    // Add options to breed input based on type selected
+    if (inputType.value != 'Select Type') {
+
+        // Iterate through breedList to push object has dog or cat type to filtered array
+        for (let i = 0; i < breedList.length; i++) {
+
+            let breed = breedList[i]
+            let value = Object.values(breed).indexOf(inputType.value)
+
+            // If object has inputType.value (either dog or cat), indexOf will return 1
+            if (value > -1) {
+                filtered.push(breed)
+            }
+        }
+
+        // Render option to breed input
+        for (let j = 0; j < filtered.length; j++) {
+            const option = document.createElement('option')
+            option.innerHTML = `<option>${filtered[j].name}</option>
+            `
+            inputBreed.appendChild(option)
+        }
+    }
+})
+
+// Toggle sidebar
+sidebarEl.addEventListener('click', function (e) {
+    const liItem = e.target.closest('li')
+
+    if (!liItem) {
+
+        sidebarEl.classList.toggle('active')
+    }
+})
 
 
 
